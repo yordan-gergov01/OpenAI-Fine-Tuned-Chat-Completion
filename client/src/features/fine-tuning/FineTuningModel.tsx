@@ -5,27 +5,34 @@ import { useFineTuneStatus } from "../../hooks/useFineTuneStatus";
 
 import { GoQuestion } from "react-icons/go";
 import { FiSend, FiPlus, FiTrash2, FiEdit2 } from "react-icons/fi";
+import { Tooltip } from "react-tooltip";
 
 import toast from "react-hot-toast";
 
-import { Tooltip } from "react-tooltip";
+import { Model, Role } from "../../types/types";
 
-export default function FineTuningForm({ examples, setExamples }) {
-  const [model, setModel] = useState("gpt-3.5-turbo");
-  const [current, setCurrent] = useState({
+export default function FineTuningForm({
+  examples,
+  setExamples,
+}: {
+  examples: any;
+  setExamples: any;
+}) {
+  const [model, setModel] = useState<Model>("gpt-3.5-turbo");
+  const [current, setCurrent] = useState<any>({
     system: "",
     user: "",
     assistant: "",
   });
-  const [editIndex, setEditIndex] = useState(null);
-  const [availableModels, setAvailableModels] = useState([]);
-  const [openExampleIndex, setOpenExampleIndex] = useState(null);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [availableModels, setAvailableModels] = useState<Model[]>([]);
+  const [openExampleIndex, setOpenExampleIndex] = useState<number | null>(null);
 
   // it might be useful to add custom errors somewhere near the form inputs in future
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [modelsLoading, setModelsLoading] = useState(false);
-  const [jobId, setJobId] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [modelsLoading, setModelsLoading] = useState<boolean>(false);
+  const [jobId, setJobId] = useState<string | number | null>(null);
 
   const {
     status,
@@ -33,8 +40,8 @@ export default function FineTuningForm({ examples, setExamples }) {
     error: statusError,
   } = useFineTuneStatus(jobId);
 
-  function handleChange(role, value) {
-    setCurrent((prev) => ({ ...prev, [role]: value }));
+  function handleChange(role: Role, value: string) {
+    setCurrent((prev: any) => ({ ...prev, [role]: value }));
   }
 
   function handleAddOrUpdate() {
@@ -49,7 +56,7 @@ export default function FineTuningForm({ examples, setExamples }) {
       setExamples(updated);
       toast.success(`Пример ${editIndex + 1} е обновен.`);
     } else {
-      setExamples((prev) => [...prev, { ...current }]);
+      setExamples((prev: any) => [...prev, { ...current }]);
       toast.success("Примерът е добавен.");
     }
 
@@ -57,12 +64,12 @@ export default function FineTuningForm({ examples, setExamples }) {
     setEditIndex(null);
   }
 
-  function handleEdit(index) {
+  function handleEdit(index: number) {
     setCurrent({ ...examples[index] });
     setEditIndex(index);
   }
 
-  function handleDelete(index) {
+  function handleDelete(index: number) {
     const updated = [...examples];
 
     updated.splice(index, 1);
@@ -85,7 +92,7 @@ export default function FineTuningForm({ examples, setExamples }) {
   }
 
   async function handleSubmit() {
-    const jsonlArray = examples.map((example) => ({
+    const jsonlArray = examples.map((example: any) => ({
       messages: [
         { role: "system", content: example.system },
         { role: "user", content: example.user },
@@ -120,7 +127,7 @@ export default function FineTuningForm({ examples, setExamples }) {
     } catch (error) {
       console.error("Request error: ", error);
       toast.error("Възникна грешка при изпращането на обучение.");
-      setError(error);
+      setError(error instanceof Error ? error : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -234,7 +241,7 @@ export default function FineTuningForm({ examples, setExamples }) {
         </button>
 
         <div className="mt-6 space-y-2">
-          {examples.map((ex, idx) => (
+          {examples.map((ex: any, idx: number) => (
             <details
               key={idx}
               className="border rounded p-3 bg-gray-50 group"

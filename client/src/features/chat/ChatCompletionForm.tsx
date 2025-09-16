@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 
 import { FiSend } from "react-icons/fi";
 import { GoQuestion } from "react-icons/go";
-
 import { Tooltip } from "react-tooltip";
+import toast from "react-hot-toast";
+
 import "react-tooltip/dist/react-tooltip.css";
 
 import { sendChatCompletionRequest } from "../../services/apiOpenAI";
-import toast from "react-hot-toast";
-
 import { ResultViewer } from "./ResultViewer";
-import { Model } from "../../types/types";
+
+import { Model, Role } from "../../types/types";
+import { ChatResult, Message } from "../../types/interfaces";
 
 const defaultModels: Model[] = ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"];
 
@@ -23,15 +24,17 @@ export default function ChatCompletionForm() {
   const [n, setN] = useState<number>(1);
   const [stream, setStream] = useState<boolean>(false);
   const [userId, setUserId] = useState<string>("");
-  const [messages, setMessages] = useState([
+
+  const [messages, setMessages] = useState<Message[]>([
     { role: "system", content: "" },
     { role: "user", content: "" },
     { role: "assistant", content: "" },
   ]);
-  const [result, setResult] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [modelsLoding, setModelsLoading] = useState(false);
+
+  const [result, setResult] = useState<ChatResult | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [modelsLoding, setModelsLoading] = useState<boolean>(false);
 
   function resetForm() {
     setModel("gpt-4o");
@@ -49,7 +52,7 @@ export default function ChatCompletionForm() {
     setError(null);
   }
 
-  function handleRoleContentChange(role, value) {
+  function handleRoleContentChange(role: Role, value: string) {
     const updated = messages.map((msg) =>
       msg.role === role ? { ...msg, content: value } : msg
     );
@@ -88,13 +91,13 @@ export default function ChatCompletionForm() {
           {
             model,
             messages,
-            temperature: parseFloat(temperature),
-            top_p: parseFloat(topP),
+            temperature,
+            top_p: topP,
             n: 1,
             stream: true,
             user: userId || undefined,
           },
-          (chunk) => {
+          (chunk: string) => {
             setResult((prev) => {
               const prevContent = prev?.choices?.[0]?.message?.content || "";
               return {
@@ -113,13 +116,13 @@ export default function ChatCompletionForm() {
         const apiResult = await sendChatCompletionRequest({
           model,
           messages,
-          temperature: parseFloat(temperature),
-          top_p: parseFloat(topP),
-          n: parseInt(n),
+          temperature,
+          top_p: topP,
+          n,
           stream: false,
           user: userId || undefined,
         });
-        const choices = apiResult.choices.map((choice) => ({
+        const choices = apiResult.choices.map((choice: any) => ({
           message: {
             content: choice.message.content,
           },
@@ -130,7 +133,7 @@ export default function ChatCompletionForm() {
     } catch (error) {
       console.error("Request error: ", error);
       toast.error("Възникна грешка при изпращането на заявката.");
-      setError(error);
+      setError(error instanceof Error ? error : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -148,7 +151,7 @@ export default function ChatCompletionForm() {
         if (Array.isArray(data.models)) {
           setAvailableModels((prev) => {
             const newModels = data.models.filter(
-              (model) => !prev.includes(model)
+              (model: Model) => !prev.includes(model)
             );
             return [...prev, ...newModels];
           });
@@ -191,7 +194,7 @@ export default function ChatCompletionForm() {
             <select
               className="w-full sm:w-80 border rounded px-2 py-1 mt-2"
               value={modelsLoding ? "Зареждане..." : model}
-              onChange={(e) => setModel(e.target.value)}
+              onChange={(e) => setModel(e.target.value as Model)}
             >
               {modelsLoding ? (
                 <option disabled>Зареждане...</option>
@@ -226,7 +229,7 @@ export default function ChatCompletionForm() {
               max="2"
               className="w-full sm:w-48 border rounded px-2 py-1 mt-2"
               value={temperature}
-              onChange={(e) => setTemperature(e.target.value)}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
             />
           </div>
 
@@ -251,7 +254,7 @@ export default function ChatCompletionForm() {
               max="1"
               className="w-full sm:w-48 border rounded px-2 py-1 mt-2"
               value={topP}
-              onChange={(e) => setTopP(e.target.value)}
+              onChange={(e) => setTopP(Number(e.target.value))}
             />
           </div>
 
@@ -274,7 +277,7 @@ export default function ChatCompletionForm() {
               min="1"
               className="w-full sm:w-48 border rounded px-2 py-1 mt-2"
               value={n}
-              onChange={(e) => setN(e.target.value)}
+              onChange={(e) => setN(Number(e.target.value))}
             />
           </div>
 
