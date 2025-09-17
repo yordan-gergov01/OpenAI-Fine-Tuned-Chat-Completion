@@ -122,13 +122,14 @@ export default function ChatCompletionForm() {
           stream: false,
           user: userId || undefined,
         });
-        const choices = apiResult.choices.map((choice: any) => ({
-          message: {
-            content: choice.message.content,
-          },
-        }));
-
-        setResult({ choices });
+        if (apiResult) {
+          const choices = apiResult.choices.map((choice) => ({
+            message: {
+              content: choice.message.content,
+            },
+          }));
+          setResult({ choices });
+        }
       }
     } catch (error) {
       console.error("Request error: ", error);

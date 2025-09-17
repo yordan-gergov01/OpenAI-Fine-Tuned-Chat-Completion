@@ -1,7 +1,15 @@
+import {
+  ChatCompletionPayload,
+  ChatCompletionResponse,
+} from "../types/interfaces";
+
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
-export async function sendChatCompletionRequest(payload, onChunk) {
+export async function sendChatCompletionRequest(
+  payload: ChatCompletionPayload,
+  onChunk?: (chunk: string) => void
+): Promise<ChatCompletionResponse | void> {
   const response = await fetch(`${baseUrl}/v1/chat/completions`, {
     method: "POST",
     headers: {
@@ -22,12 +30,13 @@ export async function sendChatCompletionRequest(payload, onChunk) {
     return await response.json();
   }
 
-  const reader = response.body.getReader();
+  const reader = response.body?.getReader();
   const decoder = new TextDecoder("utf-8");
+
+  if (!reader) return;
 
   while (true) {
     const { done, value } = await reader.read();
-
     if (done) break;
 
     const chunk = decoder.decode(value, { stream: true });
@@ -43,7 +52,8 @@ export async function sendChatCompletionRequest(payload, onChunk) {
 
         try {
           const parsedData = JSON.parse(jsonData);
-          const delta = parsedData.choices?.[0]?.delta?.content;
+          const delta: string | undefined =
+            parsedData.choices?.[0]?.delta?.content;
           if (delta && onChunk) {
             onChunk(delta);
           }

@@ -1,25 +1,24 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
+import type { Model, Role, TrainingExample } from "../../types/types";
 import { useFineTuneStatus } from "../../hooks/useFineTuneStatus";
 
+import toast from "react-hot-toast";
+import { FiEdit2, FiPlus, FiSend, FiTrash2 } from "react-icons/fi";
 import { GoQuestion } from "react-icons/go";
-import { FiSend, FiPlus, FiTrash2, FiEdit2 } from "react-icons/fi";
 import { Tooltip } from "react-tooltip";
 
-import toast from "react-hot-toast";
-
-import { Model, Role } from "../../types/types";
+interface FineTuningFormProps {
+  examples: TrainingExample[];
+  setExamples: React.Dispatch<React.SetStateAction<TrainingExample[]>>;
+}
 
 export default function FineTuningForm({
   examples,
   setExamples,
-}: {
-  examples: any;
-  setExamples: any;
-}) {
+}: FineTuningFormProps) {
   const [model, setModel] = useState<Model>("gpt-3.5-turbo");
-  const [current, setCurrent] = useState<any>({
+  const [current, setCurrent] = useState<TrainingExample>({
     system: "",
     user: "",
     assistant: "",
@@ -28,7 +27,6 @@ export default function FineTuningForm({
   const [availableModels, setAvailableModels] = useState<Model[]>([]);
   const [openExampleIndex, setOpenExampleIndex] = useState<number | null>(null);
 
-  // it might be useful to add custom errors somewhere near the form inputs in future
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [modelsLoading, setModelsLoading] = useState<boolean>(false);
@@ -183,7 +181,7 @@ export default function FineTuningForm({
             <select
               className="w-full sm:w-80 border rounded px-2 py-1 mt-2"
               value={modelsLoading ? "Зареждане..." : model}
-              onChange={(e) => setModel(e.target.value)}
+              onChange={(e) => setModel(e.target.value as Model)}
             >
               {modelsLoading ? (
                 <option disabled>Зареждане...</option>
