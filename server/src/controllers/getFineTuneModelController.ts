@@ -1,28 +1,33 @@
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
+import { Request, Response, NextFunction } from "express";
+import OpenAI from "openai";
 
-const OpenAI = require('openai');
-const AppError = require('../utils/appError');
+import AppError from "../utils/appError";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const outputDir = path.join(__dirname, '../models');
-const outputFile = path.join(outputDir, 'models.json');
+const outputDir = path.join(__dirname, "../models");
+const outputFile = path.join(outputDir, "models.json");
 
-const getFineTuneModel = async (req, res, next) => {
+export const getFineTuneModel = async (
+  req: Request<{ jobId: string }>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { jobId } = req.params;
 
     if (!jobId) {
-      return next(new AppError('JobID is required.', 400));
+      return next(new AppError("JobID is required.", 400));
     }
 
     const job = await openai.fineTuning.jobs.retrieve(jobId);
 
     if (!job) {
-      return next(new AppError('Job not found.', 404));
+      return next(new AppError("Job not found.", 404));
     }
 
     const fineTunedModel = job.fine_tuned_model;
@@ -32,10 +37,10 @@ const getFineTuneModel = async (req, res, next) => {
         fs.mkdirSync(outputDir);
       }
 
-      let existing = [];
+      let existing: string[] = [];
 
       if (fs.existsSync(outputFile)) {
-        const content = fs.readFileSync(outputFile, 'utf-8');
+        const content = fs.readFileSync(outputFile, "utf-8");
         existing = JSON.parse(content);
       }
 
@@ -44,7 +49,7 @@ const getFineTuneModel = async (req, res, next) => {
         fs.writeFileSync(
           outputFile,
           JSON.stringify(existing, null, 2),
-          'utf-8'
+          "utf-8"
         );
       }
     }
@@ -55,10 +60,8 @@ const getFineTuneModel = async (req, res, next) => {
       model: job.model,
       fine_tuned_model: job.fine_tuned_model,
     });
-  } catch (error) {
-    console.error('Error checking status and get fine-tuned model: ', error);
+  } catch (error: any) {
+    console.error("Error checking status and get fine-tuned model: ", error);
     return next(new AppError(error.message, error.status || 500));
   }
 };
-
-module.exports = getFineTuneModel;
