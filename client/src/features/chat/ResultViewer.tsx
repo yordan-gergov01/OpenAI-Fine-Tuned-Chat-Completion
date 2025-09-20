@@ -1,6 +1,6 @@
 import { FiSend } from "react-icons/fi";
 
-export function ResultViewer({ result, loading, stream }) {
+export function ResultViewer({ result, loading, stream }: any) {
   if (!result || !result.choices) {
     return loading ? (
       <p className="text-gray-500 font-medium">
@@ -17,7 +17,7 @@ export function ResultViewer({ result, loading, stream }) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Резултати</h2>
-      {result.choices.map((choice, index) => (
+      {result.choices.map((choice: any, index: any) => (
         <div key={index} className="text-gray-600 whitespace-pre-line">
           <h3 className="font-medium text-gray-800 mb-1">
             Резултат {index + 1}
